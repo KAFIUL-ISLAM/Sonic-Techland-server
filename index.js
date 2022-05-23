@@ -2,13 +2,14 @@ const express = require('express');
 const app = express();
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cors());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.jvaqe.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.sw8z3.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 function verifyJWT(req, res, next) {
@@ -35,7 +36,7 @@ async function run() {
     try {
         // Connect to DB
         await client.connect();
-        const itemCollection = client.db("Template-DB").collection("collections");
+        const partsCollection = client.db("sonic-techland").collection("parts");
 
         //JWT
         app.post('/auth', async (req, res) => {
@@ -47,63 +48,63 @@ async function run() {
         })
 
         // GET
-        app.get('/items', async (req, res) => {
+        app.get('/parts', async (req, res) => {
             const query = {};
-            const cursor = itemCollection.find(query);
-            const items = await cursor.toArray();
-            res.send(items);
+            const cursor = partsCollection.find(query);
+            const parts = await cursor.toArray();
+            res.send(parts);
         })
 
-        // GET single item by ID
-        app.get('/items/:id', async (req, res) => {
+        // GET single parts by ID
+        app.get('/parts/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
-            const item = await itemCollection.findOne(query);
-            res.send(item);
+            const parts = await partsCollection.findOne(query);
+            res.send(parts);
         })
 
-        //GET single items by email
-        app.get('/addeditems', verifyJWT, async (req, res) => {
-            const decodedEmail = req.decoded.email;
-            const email = req.query.email;
-            if (email === decodedEmail) {
-                const query = { email };
-                const cursor = itemCollection.find(query);
-                const items = await cursor.toArray();
-                res.send(items);
-            }
-            else {
-                res.status(403).send({ message: '403 Forbidden Access' })
-            }
-        })
+        // //GET single parts by email
+        // app.get('/addedparts', verifyJWT, async (req, res) => {
+        //     const decodedEmail = req.decoded.email;
+        //     const email = req.query.email;
+        //     if (email === decodedEmail) {
+        //         const query = { email };
+        //         const cursor = partsCollection.find(query);
+        //         const parts = await cursor.toArray();
+        //         res.send(parts);
+        //     }
+        //     else {
+        //         res.status(403).send({ message: '403 Forbidden Access' })
+        //     }
+        // })
 
         // POST
-        app.post('/items', async (req, res) => {
-            const newItem = req.body;
-            const result = await itemCollection.insertOne(newItem);
+        app.post('/parts', async (req, res) => {
+            const newParts = req.body;
+            const result = await partsCollection.insertOne(newParts);
             res.send(result);
         })
 
         //PUT
-        app.put('/items/:id', async (req, res) => {
+        app.put('/parts/:id', async (req, res) => {
             const id = req.params.id;
-            const updatedItem = req.body;
+            const updatedParts = req.body;
             const query = { _id: ObjectId(id) };
             const options = { upsert: true };
             const updatedDoc = {
                 $set: {
-                    quantity: updatedItem.updatedQuantity
+                    quantity: updatedParts.updatedQuantity
                 }
             }
-            const result = await itemCollection.updateOne(query, updatedDoc, options);
+            const result = await partsCollection.updateOne(query, updatedDoc, options);
             res.send(result);
         })
 
         // DELETE
-        app.delete('/items/:id', async (req, res) => {
+        app.delete('/parts/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
-            const result = await itemCollection.deleteOne(query);
+            const result = await partsCollection.deleteOne(query);
             res.send(result);
         })
     }
