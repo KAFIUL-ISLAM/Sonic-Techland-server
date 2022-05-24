@@ -54,7 +54,8 @@ async function run() {
             const query = {};
             const cursor = partsCollection.find(query);
             const parts = await cursor.toArray();
-            res.send(parts);
+            const reversedParts = parts.reverse();
+            res.send(reversedParts);
         })
         app.get('/reviews', async (req, res) => {
             const query = {};
