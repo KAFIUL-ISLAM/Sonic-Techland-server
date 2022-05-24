@@ -37,6 +37,7 @@ async function run() {
         // Connect to DB
         await client.connect();
         const partsCollection = client.db("sonic-techland").collection("parts");
+        const reviewsCollection = client.db("sonic-techland").collection("reviews");
 
         //JWT
         app.post('/auth', async (req, res) => {
@@ -53,6 +54,12 @@ async function run() {
             const cursor = partsCollection.find(query);
             const parts = await cursor.toArray();
             res.send(parts);
+        })
+        app.get('/reviews', async (req, res) => {
+            const query = {};
+            const cursor = reviewsCollection.find(query);
+            const review = await cursor.toArray();
+            res.send(review);
         })
 
         // GET single parts by ID
@@ -82,7 +89,13 @@ async function run() {
         app.post('/parts', async (req, res) => {
             const newParts = req.body;
             const result = await partsCollection.insertOne(newParts);
-            res.send(result);
+            res.send(result); //admin verify
+        })
+        
+        app.post('/reviews', async (req, res) => {
+            const newReview = req.body;
+            const result = await reviewsCollection.insertOne(newReview);
+            res.send(result); //user jwt verify
         })
 
         //PUT
