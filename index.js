@@ -38,6 +38,7 @@ async function run() {
         await client.connect();
         const partsCollection = client.db("sonic-techland").collection("parts");
         const reviewsCollection = client.db("sonic-techland").collection("reviews");
+        const ordersCollection = client.db("sonic-techland").collection("orders");
 
         //JWT
         app.post('/auth', async (req, res) => {
@@ -58,8 +59,14 @@ async function run() {
         app.get('/reviews', async (req, res) => {
             const query = {};
             const cursor = reviewsCollection.find(query);
-            const review = await cursor.toArray();
-            res.send(review);
+            const reviews = await cursor.toArray();
+            res.send(reviews);
+        })
+        app.get('/orders', async (req, res) => {
+            const query = {};
+            const cursor = ordersCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders);
         })
 
         // GET single parts by ID
@@ -70,20 +77,20 @@ async function run() {
             res.send(parts);
         })
 
-        // //GET single parts by email
-        // app.get('/addedparts', verifyJWT, async (req, res) => {
-        //     const decodedEmail = req.decoded.email;
-        //     const email = req.query.email;
-        //     if (email === decodedEmail) {
-        //         const query = { email };
-        //         const cursor = partsCollection.find(query);
-        //         const parts = await cursor.toArray();
-        //         res.send(parts);
-        //     }
-        //     else {
-        //         res.status(403).send({ message: '403 Forbidden Access' })
-        //     }
-        // })
+        //GET orders by email
+        app.get('/userOrders', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const email = req.query.email;
+            if (email === decodedEmail) {
+                const query = { email };
+                const cursor = ordersCollection.find(query);
+                const orders = await cursor.toArray();
+                res.send(orders);
+            }
+            else {
+                res.status(403).send({ message: '403 Forbidden Access' })
+            }
+        })
 
         // POST
         app.post('/parts', async (req, res) => {
@@ -91,11 +98,15 @@ async function run() {
             const result = await partsCollection.insertOne(newParts);
             res.send(result); //admin verify
         })
-        
         app.post('/reviews', async (req, res) => {
             const newReview = req.body;
             const result = await reviewsCollection.insertOne(newReview);
             res.send(result); //user jwt verify
+        })
+        app.post('/orders', async (req, res) => {
+            const newOrder = req.body;
+            const result = await reviewsCollection.insertOne(newOrder);
+            res.send(result);
         })
 
         //PUT
@@ -112,12 +123,31 @@ async function run() {
             const result = await partsCollection.updateOne(query, updatedDoc, options);
             res.send(result);
         })
+        app.put('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedOrder = req.body;
+            const query = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    status: updatedOrder.updatedStatus
+                }
+            }
+            const result = await ordersCollection.updateOne(query, updatedDoc, options);
+            res.send(result);
+        })
 
         // DELETE
         app.delete('/parts/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await partsCollection.deleteOne(query);
+            res.send(result);
+        })
+        app.delete('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await ordersCollection.deleteOne(query);
             res.send(result);
         })
     }
