@@ -124,19 +124,6 @@ async function run() {
         })
 
         //PUT
-        app.put('/parts/:id', async (req, res) => {
-            const id = req.params.id;
-            const updatedParts = req.body;
-            const query = { _id: ObjectId(id) };
-            const options = { upsert: true };
-            const updatedDoc = {
-                $set: {
-                    quantity: updatedParts.updatedQuantity
-                }
-            }
-            const result = await partsCollection.updateOne(query, updatedDoc, options);
-            res.send(result);
-        })
         app.put('/orders/:id', async (req, res) => {
             const id = req.params.id;
             const updatedOrder = req.body;
