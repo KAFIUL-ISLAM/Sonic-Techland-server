@@ -42,16 +42,6 @@ async function run() {
         const ordersCollection = client.db("sonic-techland").collection("orders");
         const userCollection = client.db("sonic-techland").collection("users");
 
-        // //JWT
-        // app.post('/auth', async (req, res) => {
-        //     const user = req.body;
-        //     const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN, {
-        //         expiresIn: '1d'
-        //     });
-        //     res.send({ accessToken });
-        // })
-
-        // GET
         app.get('/parts', async (req, res) => {
             const query = {};
             const cursor = partsCollection.find(query);
@@ -77,7 +67,7 @@ async function run() {
             const users = await cursor.toArray();
             res.send(users);
         })
-
+        
         // GET single parts by ID
         app.get('/parts/:id', async (req, res) => {
             const id = req.params.id;
@@ -85,6 +75,14 @@ async function run() {
             const parts = await partsCollection.findOne(query);
             res.send(parts);
         })
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email};
+            const user = await userCollection.findOne(query);
+            const admin = user.role === 'admin';
+            res.send({admin: true});
+        })
+
 
         //GET orders by email
         app.get('/userOrders', verifyJWT, async (req, res) => {
@@ -105,12 +103,12 @@ async function run() {
         app.post('/parts', async (req, res) => {
             const newParts = req.body;
             const result = await partsCollection.insertOne(newParts);
-            res.send(result); //admin verify
+            res.send(result);
         })
         app.post('/reviews', async (req, res) => {
             const newReview = req.body;
             const result = await reviewsCollection.insertOne(newReview);
-            res.send(result); //user jwt verify
+            res.send(result);
         })
         app.post('/orders', async (req, res) => {
             const newOrder = req.body;
@@ -144,7 +142,7 @@ async function run() {
             const result = await ordersCollection.updateOne(query, updatedDoc, options);
             res.send(result);
         })
-        app.put('/users/:id', async (req, res) => {
+        app.put('/manageUsers/:id', async (req, res) => {
             const id = req.params.id;
             const updatedRole= req.body;
             const query = { _id: ObjectId(id) };
@@ -181,6 +179,12 @@ async function run() {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await ordersCollection.deleteOne(query);
+            res.send(result);
+        })
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await userCollection.deleteOne(query);
             res.send(result);
         })
     }
