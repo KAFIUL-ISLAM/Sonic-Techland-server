@@ -40,15 +40,16 @@ async function run() {
         const partsCollection = client.db("sonic-techland").collection("parts");
         const reviewsCollection = client.db("sonic-techland").collection("reviews");
         const ordersCollection = client.db("sonic-techland").collection("orders");
+        const userCollection = client.db("sonic-techland").collection("users");
 
-        //JWT
-        app.post('/auth', async (req, res) => {
-            const user = req.body;
-            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN, {
-                expiresIn: '1d'
-            });
-            res.send({ accessToken });
-        })
+        // //JWT
+        // app.post('/auth', async (req, res) => {
+        //     const user = req.body;
+        //     const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN, {
+        //         expiresIn: '1d'
+        //     });
+        //     res.send({ accessToken });
+        // })
 
         // GET
         app.get('/parts', async (req, res) => {
@@ -69,6 +70,12 @@ async function run() {
             const cursor = ordersCollection.find(query);
             const orders = await cursor.toArray();
             res.send(orders);
+        })
+        app.get('/users', async (req, res) => {
+            const query = {};
+            const cursor = userCollection.find(query);
+            const users = await cursor.toArray();
+            res.send(users);
         })
 
         // GET single parts by ID
@@ -136,6 +143,31 @@ async function run() {
             }
             const result = await ordersCollection.updateOne(query, updatedDoc, options);
             res.send(result);
+        })
+        app.put('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedRole= req.body;
+            const query = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    role: updatedRole.role
+                }
+            }
+            const result = await userCollection.updateOne(query, updatedDoc, options);
+            res.send(result);
+        })
+        app.put('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: user
+            }
+            const result = await userCollection.updateOne(filter, updatedDoc, options);
+            const token = jwt.sign({email: email}, process.env.ACCESS_TOKEN, { expiresIn: '30d'})
+            res.send({ result, token });
         })
 
         // DELETE
