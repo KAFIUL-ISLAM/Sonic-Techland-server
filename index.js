@@ -41,6 +41,7 @@ async function run() {
         const reviewsCollection = client.db("sonic-techland").collection("reviews");
         const ordersCollection = client.db("sonic-techland").collection("orders");
         const userCollection = client.db("sonic-techland").collection("users");
+        const profileCollection = client.db("sonic-techland").collection("profiles");
 
         app.get('/parts', async (req, res) => {
             const query = {};
@@ -80,7 +81,13 @@ async function run() {
             const query = { email: email};
             const user = await userCollection.findOne(query);
             const admin = user.role === 'admin';
-            res.send({admin: true});
+            res.send({admin: admin});
+        })
+        app.get('/profiles/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email};
+            const profile = await profileCollection.findOne(query);
+            res.send(profile);
         })
 
 
@@ -166,6 +173,17 @@ async function run() {
             const result = await userCollection.updateOne(filter, updatedDoc, options);
             const token = jwt.sign({email: email}, process.env.ACCESS_TOKEN, { expiresIn: '30d'})
             res.send({ result, token });
+        })
+        app.put('/profiles/:email', async (req, res) => {
+            const email = req.params.email;
+            const profile = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: profile
+            }
+            const result = await profileCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
         })
 
         // DELETE
